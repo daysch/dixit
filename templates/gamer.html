@@ -11,6 +11,8 @@
             <tr>
                 <th>Name</th>
                 <th>Score</th>
+                <th></th>
+                <th>Ready</th>
             </tr>
         </thead>
         <tbody>
@@ -20,6 +22,13 @@
                     <td>{{ score[1] }}</td>
                     {% if score[2] %}
                         <td style="color:green">▲{{ score[2] }}</td>
+                    {% else %}
+                        <td></td>
+                    {% endif %}
+                    {% if score[3] %}
+                        <td>✅</td>
+                    {% elif not score[4] %}
+                        <td>❌</td>
                     {% else %}
                         <td></td>
                     {% endif %}
@@ -51,7 +60,8 @@
 
     <tr>
     {% for card in previous %}
-        <td><img src="https://flaskdixit.files.wordpress.com/2020/06/{{card}}.png" style="height:100px"/></td>
+        {{previous[card][2]|debug}}
+        <td><img src="https://flaskdixit.files.wordpress.com/2020/06/{{card}}.png" style="height:100px;{{'border:2px solid green' if previous[card][2]}} "/></td>
     {% endfor %}
     </tr>
 

@@ -3,7 +3,7 @@ from flask_session import Session
 from tempfile import mkdtemp
 import time
 import game
-from helpers import apology
+from helpers import apology, jinja_debug
 from urllib.parse import unquote
 import datetime
 
@@ -27,6 +27,7 @@ gamer = game.Game()
 # app.permanent_session_lifetime = datetime.timedelta(hours=8)
 app.config['SECRET_KEY'] = "Your_secret_string"
 # Session(app)
+app.jinja_env.filters["debug"] = jinja_debug
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -93,6 +94,8 @@ def play():
         success = gamer.new_game()
         if not success[0]:
             return apology(success[1])
+    session['card_played'] = (len(gamer.cards_played),len(gamer.guesses))
+    print(gamer.previous_turn())
     return render_template('gamer.html',cards=gamer.get_cards(session['id']),scores=gamer.scores(),
                                         giving=session['id'] == gamer.code_giver.id, guessing=gamer.in_play() is not None,
                                         previous=gamer.previous_turn(), giver=gamer.code_giver.name)
@@ -145,6 +148,11 @@ def get_update():
         if not in_play:
             session['known_status'] = 'playing-cards'
             return jsonify(True)
+
+    # someone's played a card
+    if session['card_played'] != (len(gamer.cards_played),len(gamer.guesses)):
+        session['card_played'] = (len(gamer.cards_played),len(gamer.guesses))
+        return jsonify(True)
 
     return jsonify(False)
 

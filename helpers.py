@@ -14,3 +14,11 @@ def apology(message, code=400):
             s = s.replace(old, new)
         return s
     return render_template("apology.html", top=code, bottom=escape(message)), code
+
+def jinja_debug(text):
+    print()
+    print()
+    print(text)
+    print()
+    print()
+    return ''

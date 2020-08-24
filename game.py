@@ -13,6 +13,7 @@ class Card:
         self.player_name = None
         self.id = card_num
         self.img = 'cards/card' + str(card_num)
+        self.clued_card = False
 
 
 class Player:
@@ -23,12 +24,16 @@ class Player:
         self.score = 0
         self.score_change = 0
         self.hand = dict()
+        self.played = 0
+        self.guessables = []
 
     def reset(self):
         # resets hand to game beginning configuration
         self.score = 0
         self.score_change = 0
         self.hand = dict()
+        self.played = 0
+        self.guessables = []
 
     def draw(self, deck, hand_size):
         # adds cards to hand
@@ -98,10 +103,13 @@ class Game:
         self.previous_plays = self.cards_played
         self.guesses = []
         self.cards_played = dict()
+        for player in self.players.values():
+            player.played = 0
+            player.guessables = []
         return self.draw()
 
     def draw(self):
-        # makes all player's draw
+        # makes all players draw
         for player in self.players.values():
             if not player.draw(self.deck, self.hand_size):
                 self.in_progress = False
@@ -145,9 +153,12 @@ class Game:
         # verify user isn't playing cards before the clue giver has given a clue
         if player != self.code_giver and len(self.cards_played) == 0:
             return False
+        elif player == self.code_giver:
+            card.clued_card = True
 
         self.cards_played[card.id] = card
         del player.hand[card_id]
+        player.played += 1
         return True
 
     def register_guess(self, player_id, card_id):
@@ -174,6 +185,7 @@ class Game:
             return False
 
         # register guess
+        player.played += self.plays_pp
         self.guesses.append((player, card))
         self.check_guesses()
         return True
@@ -217,17 +229,20 @@ class Game:
         self.start_turn()
         self.winner()
 
-    # returns list of card player is currently viewing (either guessing or in their hand) in random order
+    # returns list of cards player is currently viewing (either guessing or in their hand) in random order
     def get_cards(self,player_id):
         cards = self.in_play()
         if cards:
-            return list(np.random.permutation(cards))
+            player = self.players[player_id]
+            if not player.guessables:
+                player.guessables = list(np.random.permutation(cards))
+            return player.guessables
         else:
             return [id for id in self.players[player_id].hand]
 
     # returns sorted list of players' scores
     def scores(self):
-        return sorted([(player.name, player.score, player.score_change) for player in self.players.values()], key=lambda p: -p[1])
+        return sorted([(player.name, player.score, player.score_change, player.played == self.plays_pp or player.played and player == self.code_giver, player == self.code_giver and self.in_play()) for player in self.players.values()], key=lambda p: -p[1])
 
     # returns list of guesses made once all guesses have been made
     def all_guesses(self):
@@ -238,6 +253,11 @@ class Game:
     # returns list of cards in play
     def in_play(self):
         if len(self.cards_played) == (len(self.players) - 1) * self.plays_pp + 1:
+            # reset players to unplayed
+            if len(self.guesses) == 0:
+                for player in self.players.values():
+                    player.played = 0
+
             return [id for id in self.cards_played]
         else:
             return None
@@ -292,15 +312,15 @@ class Game:
             self.players.pop(player_id)
             return True
 
-    # returns dict with keys, id of cards played and values, tuple with first, name of card player and second, list of guessers
+    # returns dict with keys, id of cards played and values, tuple with first, name of card player; second, list of guessers; third, whether it was correct card
     def previous_turn(self):
         if self.previous_plays:
-            plays = dict([(card.id,(card.player_name,[])) for card in self.previous_plays.values()])
+            plays = dict([(card.id,(card.player_name,[],card.clued_card)) for card in self.previous_plays.values()])
             for name, card in self.previous_guesses:
                 plays[card][1].append(name)
             N = len(max(plays.values(),key=lambda t : len(t[1]))[1])
             for key in plays:
-                plays[key] = (plays[key][0], plays[key][1] + ['']* (N - len(plays[key][1])))
+                plays[key] = (plays[key][0], plays[key][1] + ['']* (N - len(plays[key][1])),plays[key][2])
             return dict(sorted(plays.items(),key= lambda item : item[1][0]))
         else:
             return dict()
