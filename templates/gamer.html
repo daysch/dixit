@@ -1,0 +1,101 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Join Game
+{% endblock %}
+
+{% block main %}
+
+<table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Score</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for score in scores %}
+                <tr>
+                    <td>{{ score[0] }}</td>
+                    <td>{{ score[1] }}</td>
+                    {% if score[2] %}
+                        <td style="color:green">▲{{ score[2] }}</td>
+                    {% else %}
+                        <td></td>
+                    {% endif %}
+                </tr>
+            {% endfor %}
+        </tbody>
+</table>
+
+{% if giving %}
+<p style="color:red">You are the clue giver</p>
+{% elif guessing %}
+<p style="color:green">Try to guess the correct card</p>
+{% else %}
+<p style="color:orange">{{giver}} is the clue giver</p>
+{% endif %}
+
+{% for card in cards %}
+<img src="https://flaskdixit.files.wordpress.com/2020/06/{{card}}.png" style="height:300px;cursor:pointer" onclick="send_to_server({{card}})"/>
+{% endfor %}
+<br>
+<br>
+{% if previous %}
+<table>
+    <tr>
+    {% for card in previous %}
+        <td>{{previous[card][0]}}</td>
+    {% endfor %}
+    </tr>
+
+    <tr>
+    {% for card in previous %}
+        <td><img src="https://flaskdixit.files.wordpress.com/2020/06/{{card}}.png" style="height:100px"/></td>
+    {% endfor %}
+    </tr>
+
+    {% for i in range((previous.values()|first)[1]|length) %}
+        <tr>
+        {% for card in previous %}
+            <td>{{previous[card][1][i]}}</td>
+        {% endfor %}
+        </tr>
+    {% endfor %}
+</table>
+{% endif %}
+
+
+
+<script>
+    // Will execute every 1 second
+    var intervalID = window.setInterval(check_server, 1000);
+
+    function check_server() {
+        $.get('/get-update',function(data) {
+            if (data) {
+                location.reload();
+            }
+        });
+    }
+
+
+    function send_to_server(card_id) {
+         $.get('/action',{card: card_id},function(data) {
+                if (!data) {
+                    alert('Unable to play/guess card');
+                }
+                else {
+                    if ('{{guessing}}' == 'True') {
+                        alert('Your guess has been registered');
+                    }
+                    $.get('/get-update',function() {
+                        location.reload();
+                    });
+                }
+         });
+    }
+</script>
+
+
+{% endblock %}

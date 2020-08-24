@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+    <head>
+
+        <!-- Required meta tags -->
+        <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+
+        <!-- documentation at http://getbootstrap.com/docs/4.0/, alternative themes at https://bootswatch.com/4-alpha/ -->
+        <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" rel="stylesheet"/>
+
+        <link href="/static/styles.css" rel="stylesheet"/>
+
+        <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js"></script>
+
+        <title>Dixit: {% block title %}{% endblock %}</title>
+
+    </head>
+
+    <body>
+        <main class="container p-5">
+            {% if 'id' in session %}
+                <!-- remove player -->
+                <div style="width: 100%">
+                    <div style="width: 50%; float: left;">
+                        <button class="btn btn-primary" onclick="leave()">Leave Game</button>
+                    </div>
+                    <div style="margin-left: 50%">
+                        <input class="form-control" name="player" placeholder="Player">
+                        <button class="btn btn-primary" onclick="remove_player()">Remove Player</button>
+                    </div>
+                </div>
+            {% elif session.name %}
+                <div style="width: 50%">
+                    <form action="/wait" method="post">
+                        <button class="btn btn-primary" type="submit">Join Game</button>
+                    </form>
+                </div>
+            {% endif %}
+            <br>
+
+            {% block main %}{% endblock %}
+        </main>
+    </body>
+<script>
+    function remove_player() {
+         $.get('/remove',{player: document.querySelector('input[name=player]').value},function(data) {
+            if (!data) {
+                alert('Player not found');
+            }
+            else {
+                window.location = window.location.href
+            }
+         });
+    }
+
+    function leave() {
+         if (confirm('Are you sure you want to leave?')) {
+             $.get('/remove',{player: null},function(data) {
+                if (!data) {
+                    alert('Player not found');
+                }
+                else {
+                    window.location = window.location.href
+                }
+             });
+         }
+    }
+</script>
+
+
+</html>

@@ -1,0 +1,33 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Waiting Room
+{% endblock %}
+
+{% block main %}
+    {% if session.id %}
+        <a href="/play" class="btn btn-primary">Start Game </a>
+        <div style="color:red">Please do not press start until all players have joined the game</div>
+    {% endif %}
+    <br>
+    Players ({{players|length}}):
+    {% for name in players %}
+        <br>
+        {{name}}
+
+    {% endfor %}
+
+<script>
+    // Will execute every 1 seconds
+    var intervalID = window.setInterval(check_server, 1000);
+
+    function check_server() {
+        $.get('/waiting',function(data) {
+            if (data) {
+                window.location.replace('/wait');
+            }
+        });
+    }
+</script>
+
+{% endblock %}

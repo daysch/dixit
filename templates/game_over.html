@@ -1,0 +1,54 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Join Game
+{% endblock %}
+
+{% block main %}
+<p style="color:red">Game Over!</p>
+<p><a href="/wait" class="btn btn-primary">Play Again</a></p>
+<table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Score</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for score in scores %}
+                <tr>
+                    <td>{{ score[0] }}</td>
+                    <td>{{ score[1] }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+</table>
+
+
+<br>
+<br>
+{% if previous %}
+<table>
+    <tr>
+    {% for card in previous %}
+        <td>{{previous[card][0]}}</td>
+    {% endfor %}
+    </tr>
+
+    <tr>
+    {% for card in previous %}
+        <td><img src="https://flaskdixit.files.wordpress.com/2020/06/{{card}}.png" style="height:100px"/></td>
+    {% endfor %}
+    </tr>
+
+    {% for i in range((previous.values()|first)[1]|length) %}
+        <tr>
+        {% for card in previous %}
+            <td>{{previous[card][1][i]}}</td>
+        {% endfor %}
+        </tr>
+    {% endfor %}
+</table>
+{% endif %}
+
+{% endblock %}
